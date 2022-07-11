@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <modules>
+        <module>spring-cloud-grpc-core</module>
+    </modules>
+    <parent>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-build</artifactId>
+        <version>3.0.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.icodening.cloud</groupId>
+    <artifactId>spring-cloud-grpc</artifactId>
+    <version>${revision}</version>
+    <packaging>pom</packaging>
+    <name>Spring Cloud Grpc</name>
+    <description>Spring Cloud Grpc</description>
+    <url>https://github.com/icodening/spring-cloud-grpc</url>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <revision>${spring.cloud.version}</revision>
+
+        <spring.boot.version>2.5.14</spring.boot.version>
+        <spring.cloud.version>2020.0.5</spring.cloud.version>
+    </properties>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
