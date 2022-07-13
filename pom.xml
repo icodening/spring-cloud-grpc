@@ -4,15 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <modules>
-        <module>spring-cloud-grpc-core</module>
-    </modules>
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-build</artifactId>
         <version>3.0.1</version>
         <relativePath/>
     </parent>
+    <modules>
+        <module>spring-cloud-grpc-core</module>
+    </modules>
 
     <groupId>com.icodening.cloud</groupId>
     <artifactId>spring-cloud-grpc</artifactId>
@@ -29,6 +29,7 @@
 
         <spring.boot.version>2.5.14</spring.boot.version>
         <spring.cloud.version>2020.0.5</spring.cloud.version>
+        <grpc.version>1.47.0</grpc.version>
     </properties>
 
 
@@ -47,6 +48,11 @@
                 <version>${spring.cloud.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-all</artifactId>
+                <version>${grpc.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
