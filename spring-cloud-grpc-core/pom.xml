@@ -36,7 +36,7 @@
     </dependencies>
 
 
-    <pluginRepositories><!-- 插件库 -->
+    <pluginRepositories>
         <pluginRepository>
             <id>protoc-plugin</id>
             <url>https://dl.bintray.com/sergei-ivanov/maven/</url>
