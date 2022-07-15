@@ -4,7 +4,6 @@ import io.grpc.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.server.GracefulShutdownCallback;
-import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 
 import java.io.IOException;
@@ -13,7 +12,7 @@ import java.io.IOException;
  * @author icodening
  * @date 2022.07.14
  */
-public class DefaultGrpcWebServer implements WebServer {
+public class DefaultGrpcWebServer implements GrpcWebServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultGrpcWebServer.class);
 
@@ -57,6 +56,6 @@ public class DefaultGrpcWebServer implements WebServer {
 
     @Override
     public void shutDownGracefully(GracefulShutdownCallback callback) {
-        WebServer.super.shutDownGracefully(callback);
+        GrpcWebServer.super.shutDownGracefully(callback);
     }
 }

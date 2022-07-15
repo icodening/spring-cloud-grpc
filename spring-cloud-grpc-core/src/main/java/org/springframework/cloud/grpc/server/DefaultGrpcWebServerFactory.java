@@ -2,7 +2,6 @@ package org.springframework.cloud.grpc.server;
 
 import io.grpc.BindableService;
 import io.grpc.ServerBuilder;
-import org.springframework.boot.web.server.WebServer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,7 @@ public class DefaultGrpcWebServerFactory implements ConfigurableGrpcServerFactor
     }
 
     @Override
-    public WebServer getWebServer() {
+    public GrpcWebServer getWebServer() {
         ServerBuilder<?> serverBuilder = ServerBuilder.forPort(port)
                 .maxInboundMessageSize(maxInboundMessageSize);
         for (BindableService bindableService : bindableServices) {

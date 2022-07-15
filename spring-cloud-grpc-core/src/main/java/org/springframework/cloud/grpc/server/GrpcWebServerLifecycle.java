@@ -1,6 +1,6 @@
 package org.springframework.cloud.grpc.server;
 
-import org.springframework.boot.web.server.WebServer;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.util.Assert;
 
@@ -10,19 +10,24 @@ import org.springframework.util.Assert;
  */
 public class GrpcWebServerLifecycle implements SmartLifecycle {
 
-    private final WebServer webServer;
+    private final GrpcWebServer webServer;
+
+    private final ApplicationContext applicationContext;
 
     private volatile boolean running = false;
 
-    public GrpcWebServerLifecycle(WebServer webServer) {
+    public GrpcWebServerLifecycle(ApplicationContext applicationContext, GrpcWebServer webServer) {
+        Assert.notNull(applicationContext, "applicationContext can not be null");
         Assert.notNull(webServer, "webServer can not be null");
         this.webServer = webServer;
+        this.applicationContext = applicationContext;
     }
 
     @Override
     public void start() {
         webServer.start();
         running = true;
+        applicationContext.publishEvent(new GrpcServerInitializedEvent(webServer));
     }
 
     @Override
@@ -34,5 +39,10 @@ public class GrpcWebServerLifecycle implements SmartLifecycle {
     @Override
     public boolean isRunning() {
         return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return Integer.MIN_VALUE + 1000;
     }
 }

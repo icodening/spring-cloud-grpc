@@ -5,6 +5,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.grpc.DefaultGrpcServiceRegistry;
 import org.springframework.cloud.grpc.GrpcJacksonMessageSerializer;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
@@ -56,14 +57,25 @@ public class GrpcServiceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public GrpcWebServerLifecycle grpcServerLauncher(GrpcWebServerFactory grpcWebServerFactory) {
-        return new GrpcWebServerLifecycle(grpcWebServerFactory.getWebServer());
+    public GrpcWebServerLifecycle grpcServerLauncher(ApplicationContext applicationContext, GrpcWebServer grpcWebServer) {
+        return new GrpcWebServerLifecycle(applicationContext, grpcWebServer);
+    }
+
+    @Bean
+    public GrpcWebServer grpcWebServer(GrpcWebServerFactory grpcWebServerFactory) {
+        return grpcWebServerFactory.getWebServer();
     }
 
     @Bean
     @ConditionalOnMissingBean
     public DefaultGrpcServerFactoryCustomizer defaultGrpcServerFactoryCustomizer(GrpcProperties grpcProperties, GrpcServerHandler serverHandler) {
         return new DefaultGrpcServerFactoryCustomizer(grpcProperties.getServer(), serverHandler);
+    }
+
+    @Bean
+    @ConditionalOnBean(Registration.class)
+    public GrpcServerMetadataCustomizer grpcServerMetadataRegister(Registration registration) {
+        return new GrpcServerMetadataCustomizer(registration);
     }
 
     @Bean
