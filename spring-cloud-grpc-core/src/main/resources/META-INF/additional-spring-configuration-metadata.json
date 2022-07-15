@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "grpc.server.port",
+      "type": "java.lang.Integer",
+      "description": "the grpc server port.",
+      "defaultValue": "30880"
+    },
+    {
+      "name": "grpc.server.max-inbound-message-size",
+      "type": "java.lang.Integer",
+      "description": "the maximum number of requests that grpc server can accept.",
+      "defaultValue": "8MB"
+    },
+    {
+      "name": "grpc.client.use-plain-text",
+      "type": "java.lang.Boolean",
+      "description": "specifies whether to use plain text transmission.",
+      "defaultValue": true
+    },
+    {
+      "name": "grpc.client.max-inbound-message-size",
+      "type": "java.lang.Integer",
+      "description": "the maximum number of requests that grpc client can transmit.",
+      "defaultValue": "8MB"
+    }
+  ]
+}
