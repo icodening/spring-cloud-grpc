@@ -1,6 +1,8 @@
 package org.springframework.cloud.grpc;
 
 import io.grpc.stub.AbstractStub;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -34,6 +36,8 @@ import java.util.Set;
  * @date 2022.07.12
  */
 public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware, ResourceLoaderAware {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnableGrpcRegistrar.class);
 
     private static final String GRPC_CLIENT_BEAN_SUFFIX = "&GrpcClient";
 
@@ -95,6 +99,7 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
                 if (AbstractStub.class.isAssignableFrom(stubType)) {
                     registerGrpcClientWithStub(registry, stubType, application, annotationMetadata);
                 }
+                LOGGER.warn(GrpcClient.class.getSimpleName() + " can only apply on interfaces or GRPC Stub classes");
             }
         }
     }
