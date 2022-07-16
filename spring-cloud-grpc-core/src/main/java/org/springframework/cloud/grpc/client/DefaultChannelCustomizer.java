@@ -32,9 +32,7 @@ public class DefaultChannelCustomizer implements ConfigurableGrpcChannelFactoryC
         }
         if (applicationContext != null) {
             Map<String, ClientInterceptor> clientInterceptorMap = applicationContext.getBeansOfType(ClientInterceptor.class);
-            for (ClientInterceptor interceptor : clientInterceptorMap.values()) {
-                configurableGrpcChannelFactory.intercept(interceptor);
-            }
+            configurableGrpcChannelFactory.intercept(clientInterceptorMap.values());
         }
     }
 

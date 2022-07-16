@@ -19,5 +19,12 @@ public interface ConfigurableGrpcChannelFactory {
 
     ConfigurableGrpcChannelFactory intercept(ClientInterceptor clientInterceptor);
 
+    default ConfigurableGrpcChannelFactory intercept(Iterable<ClientInterceptor> iterable) {
+        for (ClientInterceptor clientInterceptor : iterable) {
+            intercept(clientInterceptor);
+        }
+        return this;
+    }
+
     Channel getChannel(String address, int port);
 }
