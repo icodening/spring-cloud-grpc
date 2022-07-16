@@ -3,7 +3,6 @@ package org.springframework.cloud.grpc.loadbalancer;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 import io.grpc.Channel;
-import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
@@ -32,7 +31,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
 
     private final GrpcMessageSerializer grpcMessageSerializer;
 
-    private final Channel fakeChannel;
+    private final ExchangerGrpc.ExchangerFutureStub futureStub;
 
     public GrpcLoadBalancerInvoker(String application, LoadBalancerClient loadBalancerClient,
                                    GrpcMessageSerializer grpcMessageSerializer,
@@ -42,17 +41,17 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
         Assert.notNull(grpcMessageSerializer, "GrpcMessageConverter can not be null");
         this.application = application;
         this.grpcMessageSerializer = grpcMessageSerializer;
-        ClientInterceptor clientInterceptor = new SpringCloudLoadBalancerClientInterceptor(application, loadBalancerClient, grpcChannelManager);
-        this.fakeChannel = ManagedChannelBuilder.forTarget(application)
-                .intercept(clientInterceptor)
+        Channel fakeChannel = ManagedChannelBuilder.forTarget(application)
+                .intercept(new SpringCloudLoadBalancerClientInterceptor(application, loadBalancerClient, grpcChannelManager))
                 .build();
+        this.futureStub = ExchangerGrpc.newFutureStub(fakeChannel);
     }
 
     @Nullable
     @Override
     public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
         GrpcExchanger.Message grpcRequest = buildRequest(invocation);
-        ListenableFuture<GrpcExchanger.Message> grpcResponse = ExchangerGrpc.newFutureStub(fakeChannel).exchange(grpcRequest);
+        ListenableFuture<GrpcExchanger.Message> grpcResponse = futureStub.exchange(grpcRequest);
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (CompletableFuture.class.isAssignableFrom(returnType)) {
             CompletableFuture<Object> returnCompletableFuture = new CompletableFuture<>();

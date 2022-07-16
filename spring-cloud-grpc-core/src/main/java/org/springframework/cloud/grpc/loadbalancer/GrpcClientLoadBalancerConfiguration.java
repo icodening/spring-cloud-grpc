@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.GrpcProperties;
-import org.springframework.cloud.grpc.SimpleGrpcChannelManager;
+import org.springframework.cloud.grpc.SimpleSingleGrpcChannelManager;
 import org.springframework.cloud.grpc.client.ConfigurableGrpcChannelFactory;
 import org.springframework.cloud.grpc.client.ConfigurableGrpcChannelFactoryCustomizer;
 import org.springframework.cloud.grpc.client.DefaultChannelCustomizer;
@@ -40,7 +40,7 @@ public class GrpcClientLoadBalancerConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public GrpcChannelManager defaultGrpcChannelManager(ConfigurableGrpcChannelFactory channelFactory) {
-        return new SimpleGrpcChannelManager(channelFactory);
+        return new SimpleSingleGrpcChannelManager(channelFactory);
     }
 
     @Bean

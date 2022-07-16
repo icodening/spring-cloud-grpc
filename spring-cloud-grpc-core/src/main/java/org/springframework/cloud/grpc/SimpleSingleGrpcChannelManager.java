@@ -11,13 +11,13 @@ import java.util.concurrent.ConcurrentMap;
  * @author icodening
  * @date 2022.07.15
  */
-public class SimpleGrpcChannelManager implements GrpcChannelManager {
+public class SimpleSingleGrpcChannelManager implements GrpcChannelManager {
 
     private final ConcurrentMap<String, ChannelHolder> channelConcurrentMap = new ConcurrentHashMap<>();
 
     private final ConfigurableGrpcChannelFactory channelFactory;
 
-    public SimpleGrpcChannelManager(ConfigurableGrpcChannelFactory channelFactory) {
+    public SimpleSingleGrpcChannelManager(ConfigurableGrpcChannelFactory channelFactory) {
         this.channelFactory = channelFactory;
     }
 
@@ -29,8 +29,8 @@ public class SimpleGrpcChannelManager implements GrpcChannelManager {
         if (channel == null) {
             synchronized (channelHolder) {
                 if (channel == null) {
-                    channel = channelFactory.getChannel(name, port);
                     channelHolder.setChannel(channelFactory.getChannel(name, port));
+                    channel = channelHolder.getChannel();
                 }
             }
         }
