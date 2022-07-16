@@ -1,14 +1,23 @@
 package org.springframework.cloud.grpc.client;
 
+import io.grpc.ClientInterceptor;
+import org.springframework.beans.BeansException;
 import org.springframework.cloud.grpc.GrpcProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.NonNull;
+
+import java.util.Map;
 
 /**
  * @author icodening
  * @date 2022.07.15
  */
-public class DefaultChannelCustomizer implements ConfigurableGrpcChannelFactoryCustomizer {
+public class DefaultChannelCustomizer implements ConfigurableGrpcChannelFactoryCustomizer, ApplicationContextAware {
 
     private final GrpcProperties.Client clientProperties;
+
+    private ApplicationContext applicationContext;
 
     public DefaultChannelCustomizer(GrpcProperties.Client clientProperties) {
         this.clientProperties = clientProperties;
@@ -21,5 +30,16 @@ public class DefaultChannelCustomizer implements ConfigurableGrpcChannelFactoryC
         if (clientProperties.isUsePlainText()) {
             configurableGrpcChannelFactory.usePlainText();
         }
+        if (applicationContext != null) {
+            Map<String, ClientInterceptor> clientInterceptorMap = applicationContext.getBeansOfType(ClientInterceptor.class);
+            for (ClientInterceptor interceptor : clientInterceptorMap.values()) {
+                configurableGrpcChannelFactory.intercept(interceptor);
+            }
+        }
+    }
+
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }
