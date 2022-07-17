@@ -26,8 +26,8 @@ public class DefaultConfigurableGrpcChannelFactory implements ConfigurableGrpcCh
     private final List<ClientInterceptor> clientInterceptors = new ArrayList<>();
 
     @Override
-    public ConfigurableGrpcChannelFactory usePlainText() {
-        this.usePlainText = true;
+    public ConfigurableGrpcChannelFactory usePlainText(boolean flag) {
+        this.usePlainText = flag;
         return this;
     }
 

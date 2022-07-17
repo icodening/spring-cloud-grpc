@@ -26,10 +26,8 @@ public class DefaultChannelCustomizer implements ConfigurableGrpcChannelFactoryC
     @Override
     public void customize(ConfigurableGrpcChannelFactory configurableGrpcChannelFactory) {
         configurableGrpcChannelFactory
-                .maxInboundMessageSize((int) clientProperties.getMaxInboundMessageSize().toBytes());
-        if (clientProperties.isUsePlainText()) {
-            configurableGrpcChannelFactory.usePlainText();
-        }
+                .maxInboundMessageSize((int) clientProperties.getMaxInboundMessageSize().toBytes())
+                .usePlainText(clientProperties.isUsePlainText());
         if (applicationContext != null) {
             Map<String, ClientInterceptor> clientInterceptorMap = applicationContext.getBeansOfType(ClientInterceptor.class);
             configurableGrpcChannelFactory.intercept(clientInterceptorMap.values());

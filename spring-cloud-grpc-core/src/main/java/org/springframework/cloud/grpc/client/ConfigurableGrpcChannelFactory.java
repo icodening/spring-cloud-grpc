@@ -9,7 +9,7 @@ import io.grpc.ClientInterceptor;
  */
 public interface ConfigurableGrpcChannelFactory {
 
-    ConfigurableGrpcChannelFactory usePlainText();
+    ConfigurableGrpcChannelFactory usePlainText(boolean flag);
 
     ConfigurableGrpcChannelFactory userAgent(String userAgent);
 
