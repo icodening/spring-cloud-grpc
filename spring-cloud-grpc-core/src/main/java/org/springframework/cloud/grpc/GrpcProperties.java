@@ -59,6 +59,12 @@ public class GrpcProperties {
 
         private int port = 30880;
 
+        private int maximumPoolSize = 1;
+
+        private int corePoolSize = 1;
+
+        private int threadsQueue = 0;
+
         private DataSize maxInboundMessageSize = DataSize.ofBytes(8 * 1024 * 1024);
 
         public int getPort() {
@@ -67,6 +73,33 @@ public class GrpcProperties {
 
         public void setPort(int port) {
             this.port = port;
+        }
+
+        public int getMaximumPoolSize() {
+            return maximumPoolSize;
+        }
+
+        public Server setMaximumPoolSize(int maximumPoolSize) {
+            this.maximumPoolSize = maximumPoolSize;
+            return this;
+        }
+
+        public int getCorePoolSize() {
+            return corePoolSize;
+        }
+
+        public Server setCorePoolSize(int corePoolSize) {
+            this.corePoolSize = corePoolSize;
+            return this;
+        }
+
+        public int getThreadsQueue() {
+            return threadsQueue;
+        }
+
+        public Server setThreadsQueue(int threadsQueue) {
+            this.threadsQueue = threadsQueue;
+            return this;
         }
 
         public DataSize getMaxInboundMessageSize() {

@@ -58,7 +58,7 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
             return;
         }
         if (CompletableFuture.class.isAssignableFrom(method.getReturnType())) {
-            CompletableFuture<Object> returnCompletableFuture = ((CompletableFuture<Object>) returnValue);
+            CompletableFuture<?> returnCompletableFuture = ((CompletableFuture<?>) returnValue);
             returnCompletableFuture.thenAccept((actualReturnValue) -> {
                 GrpcExchanger.Message.Builder responseMessageBuilder = GrpcExchanger.Message.newBuilder();
                 if (actualReturnValue == null) {

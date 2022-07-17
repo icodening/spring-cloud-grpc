@@ -14,4 +14,10 @@ public interface ConfigurableGrpcServerFactory extends WebServerFactory {
     ConfigurableGrpcServerFactory maxInboundMessageSize(int maxInboundMessageSize);
 
     ConfigurableGrpcServerFactory addService(BindableService bindableService);
+
+    ConfigurableGrpcServerFactory maximumPoolSize(int max);
+
+    ConfigurableGrpcServerFactory corePoolSize(int cores);
+
+    ConfigurableGrpcServerFactory threadsQueue(int queueSize);
 }

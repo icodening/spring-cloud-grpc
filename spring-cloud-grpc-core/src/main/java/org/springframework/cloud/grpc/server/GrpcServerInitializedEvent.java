@@ -16,4 +16,8 @@ public class GrpcServerInitializedEvent extends ApplicationEvent {
     public GrpcWebServer getSource() {
         return (GrpcWebServer) super.getSource();
     }
+
+    public GrpcWebServer getGrpcWebServer() {
+        return getSource();
+    }
 }

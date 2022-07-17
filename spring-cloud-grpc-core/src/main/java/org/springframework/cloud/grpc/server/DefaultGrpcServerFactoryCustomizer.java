@@ -17,20 +17,19 @@ public class DefaultGrpcServerFactoryCustomizer implements ConfigurableGrpcServe
 
     private final GrpcProperties.Server serverProperties;
 
-    private final GrpcServerHandler serverHandler;
-
     private ApplicationContext applicationContext;
 
-    public DefaultGrpcServerFactoryCustomizer(GrpcProperties.Server serverProperties, GrpcServerHandler serverHandler) {
+    public DefaultGrpcServerFactoryCustomizer(GrpcProperties.Server serverProperties) {
         this.serverProperties = serverProperties;
-        this.serverHandler = serverHandler;
     }
 
     @Override
     public void customize(ConfigurableGrpcServerFactory factory) {
         factory.port(serverProperties.getPort())
                 .maxInboundMessageSize((int) serverProperties.getMaxInboundMessageSize().toBytes())
-                .addService(serverHandler);
+                .corePoolSize(serverProperties.getCorePoolSize())
+                .maximumPoolSize(serverProperties.getMaximumPoolSize())
+                .threadsQueue(serverProperties.getThreadsQueue());
         if (applicationContext != null) {
             Map<String, BindableService> bindableServiceMap = applicationContext.getBeansOfType(BindableService.class);
             for (BindableService bindableService : bindableServiceMap.values()) {

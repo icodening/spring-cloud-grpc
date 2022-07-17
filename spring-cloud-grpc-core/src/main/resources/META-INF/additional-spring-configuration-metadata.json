@@ -7,6 +7,24 @@
       "defaultValue": "30880"
     },
     {
+      "name": "grpc.server.core-pool-size",
+      "type": "java.lang.Integer",
+      "description": "the core pool size of the grpc server thread pool.",
+      "defaultValue": "1"
+    },
+    {
+      "name": "grpc.server.maximum-pool-size",
+      "type": "java.lang.Integer",
+      "description": "the maximum pool size of the grpc server thread pool, use 'directExecutor' when it is 1.",
+      "defaultValue": "1"
+    },
+    {
+      "name": "grpc.server.threads-queue",
+      "type": "java.lang.Integer",
+      "description": "the queue size of the grpc server thread pool.",
+      "defaultValue": "0"
+    },
+    {
       "name": "grpc.server.max-inbound-message-size",
       "type": "java.lang.Integer",
       "description": "the maximum number of requests that grpc server can accept.",

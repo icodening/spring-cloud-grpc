@@ -68,8 +68,8 @@ public class GrpcServiceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public DefaultGrpcServerFactoryCustomizer defaultGrpcServerFactoryCustomizer(GrpcProperties grpcProperties, GrpcServerHandler serverHandler) {
-        return new DefaultGrpcServerFactoryCustomizer(grpcProperties.getServer(), serverHandler);
+    public DefaultGrpcServerFactoryCustomizer defaultGrpcServerFactoryCustomizer(GrpcProperties grpcProperties) {
+        return new DefaultGrpcServerFactoryCustomizer(grpcProperties.getServer());
     }
 
     @Bean
