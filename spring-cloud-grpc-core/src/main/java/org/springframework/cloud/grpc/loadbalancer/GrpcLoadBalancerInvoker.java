@@ -11,7 +11,7 @@ import org.springframework.cloud.grpc.GrpcExchanger;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
 import org.springframework.cloud.grpc.client.GrpcClientInvoker;
-import org.springframework.cloud.grpc.support.SpringCloudLoadBalancerClientInterceptor;
+import org.springframework.cloud.grpc.support.LoadBalancerGrpcClientInterceptor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -42,7 +42,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
         this.application = application;
         this.grpcMessageSerializer = grpcMessageSerializer;
         Channel fakeChannel = ManagedChannelBuilder.forTarget(application)
-                .intercept(new SpringCloudLoadBalancerClientInterceptor(application, loadBalancerClient, grpcChannelManager))
+                .intercept(new LoadBalancerGrpcClientInterceptor(application, loadBalancerClient, grpcChannelManager))
                 .build();
         this.futureStub = ExchangerGrpc.newFutureStub(fakeChannel);
     }
