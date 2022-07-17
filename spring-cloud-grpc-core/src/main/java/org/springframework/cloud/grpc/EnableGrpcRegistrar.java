@@ -98,6 +98,7 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
                 Class<?> stubType = ClassUtils.resolveClassName(annotationMetadata.getClassName(), ClassUtils.getDefaultClassLoader());
                 if (AbstractStub.class.isAssignableFrom(stubType)) {
                     registerGrpcClientWithStub(registry, stubType, application, annotationMetadata);
+                    continue;
                 }
                 LOGGER.warn(GrpcClient.class.getSimpleName() + " can only apply on interfaces or GRPC Stub classes");
             }
