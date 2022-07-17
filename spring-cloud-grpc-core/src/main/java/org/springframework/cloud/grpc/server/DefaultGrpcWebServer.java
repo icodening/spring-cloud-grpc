@@ -34,7 +34,6 @@ public class DefaultGrpcWebServer implements GrpcWebServer {
                     grpServer.shutdown();
                 }
             });
-            holder.setDaemon(true);
             holder.setName("grpc-server-holder");
             holder.start();
             LOGGER.info("GrpcServer started on port(s): {}", getPort());
