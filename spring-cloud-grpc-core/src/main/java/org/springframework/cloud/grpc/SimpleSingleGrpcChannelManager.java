@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class SimpleSingleGrpcChannelManager implements GrpcChannelManager {
 
+    //TODO clear channel when channel was closed
     private final ConcurrentMap<String, ChannelHolder> channelConcurrentMap = new ConcurrentHashMap<>();
 
     private final ConfigurableGrpcChannelFactory channelFactory;
