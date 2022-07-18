@@ -4,7 +4,6 @@ import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.AbstractFutureStub;
 import io.grpc.stub.AbstractStub;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
@@ -56,7 +55,7 @@ public class GrpcStubFactoryBean<T extends AbstractStub<T>> implements FactoryBe
                 new LoadBalancerGrpcClientInterceptor(application,
                         loadBalancerClient,
                         grpcContext.getInstance(application, GrpcChannelManager.class)));
-        return AbstractFutureStub.newStub(stubFactory,
+        return AbstractStub.newStub(stubFactory,
                 ManagedChannelBuilder.forTarget(application)
                         .intercept(interceptor)
                         .build());

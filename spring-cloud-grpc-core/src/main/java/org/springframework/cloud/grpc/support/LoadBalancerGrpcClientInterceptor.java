@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
-
-import java.io.IOException;
 
 /**
  * @author icodening
@@ -40,21 +37,13 @@ public class LoadBalancerGrpcClientInterceptor implements ClientInterceptor {
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel channel) {
-        try {
-            return loadBalancerClient.execute(application, new LoadBalancerRequest<ClientCall<ReqT, RespT>>() {
-                @Override
-                public ClientCall<ReqT, RespT> apply(ServiceInstance serviceInstance) throws Exception {
-                    String host = serviceInstance.getHost();
-                    String port = serviceInstance.getMetadata().get(GRPC_PORT_KEY);
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("The result for the [SpringCloudLoadBalancer] is: {}:{}", host, port);
-                    }
-                    Channel realChannel = channelManager.getOrCreate(host, Integer.parseInt(port));
-                    return realChannel.newCall(method, callOptions);
-                }
-            });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        ServiceInstance serviceInstance = loadBalancerClient.choose(application);
+        String host = serviceInstance.getHost();
+        String port = serviceInstance.getMetadata().get(GRPC_PORT_KEY);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("The result for the [SpringCloudLoadBalancer] is: {}:{}", host, port);
         }
+        Channel realChannel = channelManager.getOrCreate(host, Integer.parseInt(port));
+        return realChannel.newCall(method, callOptions);
     }
 }
