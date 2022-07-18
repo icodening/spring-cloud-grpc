@@ -23,7 +23,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -57,7 +57,7 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
     private void registerGrpcServices(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry);
         scanner.setResourceLoader(this.resourceLoader);
-        scanner.addIncludeFilter(new AnnotationTypeFilter(Service.class));
+        scanner.addIncludeFilter(new AnnotationTypeFilter(Component.class));
         Set<String> basePackages = getBasePackages(importingClassMetadata);
         scanner.scan(basePackages.toArray(new String[0]));
     }
