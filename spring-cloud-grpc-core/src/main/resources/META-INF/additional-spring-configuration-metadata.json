@@ -1,6 +1,12 @@
 {
   "properties": [
     {
+      "name": "grpc.auto-register-grpc-stubs.enabled",
+      "type": "java.lang.Boolean",
+      "description": "auto register switch of grpc stub.",
+      "defaultValue": "true"
+    },
+    {
       "name": "grpc.server.port",
       "type": "java.lang.Integer",
       "description": "the grpc server port.",

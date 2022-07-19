@@ -22,6 +22,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
@@ -39,6 +40,8 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EnableGrpcRegistrar.class);
 
+    private static final String AUTO_REGISTER_GRPC_STUBS_KEY = "grpc.auto-register-grpc-stubs.enabled";
+
     private static final String GRPC_CLIENT_BEAN_SUFFIX = "&GrpcClient";
 
     private static final String GRPC_STUB_BEAN_SUFFIX = "&GrpcStub";
@@ -51,15 +54,8 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
     public void registerBeanDefinitions(@NonNull AnnotationMetadata importingClassMetadata, @NonNull BeanDefinitionRegistry registry) {
         registerDefaultConfiguration(importingClassMetadata, registry);
         registerGrpcClients(importingClassMetadata, registry);
+        registerGrpcStubs(importingClassMetadata, registry);
         registerGrpcServices(importingClassMetadata, registry);
-    }
-
-    private void registerGrpcServices(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry);
-        scanner.setResourceLoader(this.resourceLoader);
-        scanner.addIncludeFilter(new AnnotationTypeFilter(Component.class));
-        Set<String> basePackages = getBasePackages(importingClassMetadata);
-        scanner.scan(basePackages.toArray(new String[0]));
     }
 
     private void registerDefaultConfiguration(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
@@ -95,26 +91,65 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
                     registerGrpcClient(registry, application, annotationMetadata);
                     continue;
                 }
-                Class<?> stubType = ClassUtils.resolveClassName(annotationMetadata.getClassName(), ClassUtils.getDefaultClassLoader());
-                if (AbstractStub.class.isAssignableFrom(stubType)) {
-                    registerGrpcClientWithStub(registry, stubType, application, annotationMetadata);
-                    continue;
-                }
-                LOGGER.warn(GrpcClient.class.getSimpleName() + " can only apply on interfaces or GRPC Stub classes");
+                LOGGER.warn(GrpcClient.class.getSimpleName() + " can only apply on interfaces");
             }
         }
     }
 
-    private void registerGrpcClientWithStub(BeanDefinitionRegistry registry,
-                                            Class<?> stubType,
-                                            String application,
-                                            AnnotationMetadata annotationMetadata) {
+    private void registerGrpcStubs(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+        String enabledString = environment.getProperty(AUTO_REGISTER_GRPC_STUBS_KEY, Boolean.TRUE.toString());
+        boolean autoRegisterGrpcStubs = Boolean.parseBoolean(enabledString);
+        LOGGER.info("grpc.auto-register-grpc-stubs.enabled=" + autoRegisterGrpcStubs);
+        if (!autoRegisterGrpcStubs) {
+            return;
+        }
+        ClassPathScanningCandidateComponentProvider scanner = getScanner();
+        scanner.setResourceLoader(this.resourceLoader);
+        scanner.addIncludeFilter(new AssignableTypeFilter(AbstractStub.class));
+        Set<String> basePackages = getBasePackages(importingClassMetadata);
+        LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
+        for (String basePackage : basePackages) {
+            candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
+        }
+        for (BeanDefinition candidateComponent : candidateComponents) {
+            String stubTypeName = candidateComponent.getBeanClassName();
+            if (StringUtils.hasText(stubTypeName)) {
+                registerStub(registry, ClassUtils.resolveClassName(stubTypeName, ClassUtils.getDefaultClassLoader()));
+            }
+        }
+
+    }
+
+    private void registerGrpcServices(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry);
+        scanner.setResourceLoader(this.resourceLoader);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(Component.class));
+        Set<String> basePackages = getBasePackages(importingClassMetadata);
+        scanner.scan(basePackages.toArray(new String[0]));
+    }
+
+    private void registerClientConfiguration(BeanDefinitionRegistry registry, String name, Class<?>[] configuration) {
+        String beanName = name + "." + GrpcClientSpecification.class.getSimpleName();
+        if (registry.containsBeanDefinition(beanName)) {
+            return;
+        }
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(GrpcClientSpecification.class);
+        builder.addConstructorArgValue(name);
+        builder.addConstructorArgValue(configuration);
+        registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
+    }
+
+    private void registerStub(BeanDefinitionRegistry registry, Class<?> stubType) {
+        String className = stubType.getSimpleName();
+        String stubBeanName = className + GRPC_STUB_BEAN_SUFFIX;
+        if (registry.containsBeanDefinition(stubBeanName)) {
+            return;
+        }
         BeanDefinitionBuilder stubBuilder = BeanDefinitionBuilder.genericBeanDefinition(GrpcStubFactoryBean.class);
-        stubBuilder.addConstructorArgValue(application);
+        stubBuilder.addConstructorArgValue("sc-service-provider");
         stubBuilder.addConstructorArgValue(stubType);
         stubBuilder.setLazyInit(true);
-        String className = annotationMetadata.getClassName();
-        registry.registerBeanDefinition(className + GRPC_STUB_BEAN_SUFFIX, stubBuilder.getBeanDefinition());
+        registry.registerBeanDefinition(stubBeanName, stubBuilder.getBeanDefinition());
     }
 
     private void registerGrpcClient(BeanDefinitionRegistry registry,
@@ -160,17 +195,6 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
             basePackages.add(ClassUtils.getPackageName(importingClassMetadata.getClassName()));
         }
         return basePackages;
-    }
-
-    private void registerClientConfiguration(BeanDefinitionRegistry registry, String name, Class<?>[] configuration) {
-        String beanName = name + "." + GrpcClientSpecification.class.getSimpleName();
-        if (registry.containsBeanDefinition(beanName)) {
-            return;
-        }
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(GrpcClientSpecification.class);
-        builder.addConstructorArgValue(name);
-        builder.addConstructorArgValue(configuration);
-        registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
     }
 
     @Override
