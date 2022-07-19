@@ -97,8 +97,7 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
     }
 
     private void registerGrpcStubs(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-        String enabledString = environment.getProperty(AUTO_REGISTER_GRPC_STUBS_KEY, Boolean.TRUE.toString());
-        boolean autoRegisterGrpcStubs = Boolean.parseBoolean(enabledString);
+        boolean autoRegisterGrpcStubs = environment.getProperty(AUTO_REGISTER_GRPC_STUBS_KEY, boolean.class, true);
         LOGGER.info("grpc.auto-register-grpc-stubs.enabled=" + autoRegisterGrpcStubs);
         if (!autoRegisterGrpcStubs) {
             return;
@@ -146,7 +145,6 @@ public class EnableGrpcRegistrar implements ImportBeanDefinitionRegistrar, Envir
             return;
         }
         BeanDefinitionBuilder stubBuilder = BeanDefinitionBuilder.genericBeanDefinition(GrpcStubFactoryBean.class);
-        stubBuilder.addConstructorArgValue("sc-service-provider");
         stubBuilder.addConstructorArgValue(stubType);
         stubBuilder.setLazyInit(true);
         registry.registerBeanDefinition(stubBeanName, stubBuilder.getBeanDefinition());

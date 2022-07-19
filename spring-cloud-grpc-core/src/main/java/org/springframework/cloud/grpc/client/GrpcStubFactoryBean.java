@@ -14,10 +14,16 @@ import org.springframework.cloud.grpc.support.GrpcReactiveClientInterceptor;
 import org.springframework.cloud.grpc.support.LoadBalancerGrpcClientInterceptor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.lang.NonNull;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author icodening
@@ -25,14 +31,11 @@ import java.lang.reflect.Constructor;
  */
 public class GrpcStubFactoryBean<T extends AbstractStub<T>> implements FactoryBean<T>, ApplicationContextAware {
 
-    private final String application;
-
     private final Class<T> stubType;
 
     private ApplicationContext applicationContext;
 
-    public GrpcStubFactoryBean(String application, Class<T> stubType) {
-        this.application = application;
+    public GrpcStubFactoryBean(Class<T> stubType) {
         this.stubType = stubType;
     }
 
@@ -49,14 +52,31 @@ public class GrpcStubFactoryBean<T extends AbstractStub<T>> implements FactoryBe
                 }
             }
         };
+        String stubTypeName = stubType.getName();
+        String grpcClassName = stubTypeName.substring(0, stubTypeName.indexOf("$"));
+        Class<?> grpcClass = ClassUtils.resolveClassName(grpcClassName, ClassUtils.getDefaultClassLoader());
+        Map<String, ApplicationMapping> mappingMap = applicationContext.getBeansOfType(ApplicationMapping.class);
+        List<ApplicationMapping> mappings = new ArrayList<>(mappingMap.values());
+        AnnotationAwareOrderComparator.sort(mappings);
+        String application = null;
+        for (ApplicationMapping applicationMapping : mappings) {
+            application = applicationMapping.getApplication(grpcClass);
+            if (StringUtils.hasText(application)) {
+                break;
+            }
+        }
+        if (application == null) {
+            throw new IllegalArgumentException(grpcClassName + " does not configure the target application name");
+        }
+        final String targetApplication = application;
         LoadBalancerClient loadBalancerClient = applicationContext.getBean(LoadBalancerClient.class);
         GrpcContext grpcContext = applicationContext.getBean(GrpcContext.class);
         ClientInterceptor interceptor = new GrpcReactiveClientInterceptor(() ->
-                new LoadBalancerGrpcClientInterceptor(application,
+                new LoadBalancerGrpcClientInterceptor(targetApplication,
                         loadBalancerClient,
-                        grpcContext.getInstance(application, GrpcChannelManager.class)));
+                        grpcContext.getInstance(targetApplication, GrpcChannelManager.class)));
         return AbstractStub.newStub(stubFactory,
-                ManagedChannelBuilder.forTarget(application)
+                ManagedChannelBuilder.forTarget(targetApplication)
                         .intercept(interceptor)
                         .build());
     }
