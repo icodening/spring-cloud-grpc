@@ -4,6 +4,9 @@ import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
+import io.grpc.ForwardingClientCall;
+import io.grpc.ForwardingClientCallListener;
+import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +47,22 @@ public class LoadBalancerGrpcClientInterceptor implements ClientInterceptor {
             LOGGER.debug("The result for the [SpringCloudLoadBalancer] is: {}:{}", host, port);
         }
         Channel realChannel = channelManager.getOrCreate(host, Integer.parseInt(port));
-        return realChannel.newCall(method, callOptions);
+        ClientCall<ReqT, RespT> delegate = realChannel.newCall(method, callOptions);
+        return new ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(delegate) {
+            @Override
+            public void start(Listener<RespT> responseListener, Metadata headers) {
+                ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> newListener =
+                        new ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(responseListener) {
+                            @Override
+                            public void onMessage(RespT message) {
+                                super.onMessage(message);
+                                if (LOGGER.isDebugEnabled()) {
+                                    LOGGER.debug("request success for channel [{}:{}]", host, port);
+                                }
+                            }
+                        };
+                super.start(newListener, headers);
+            }
+        };
     }
 }

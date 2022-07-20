@@ -3,6 +3,9 @@ package org.springframework.cloud.grpc;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author icodening
  * @date 2022.07.12
@@ -13,6 +16,8 @@ public class GrpcProperties {
     private Client client = new Client();
 
     private Server server = new Server();
+
+    private Map<String, String> interfaceApplicationMapping = new HashMap<>();
 
     public Client getClient() {
         return client;
@@ -28,6 +33,15 @@ public class GrpcProperties {
 
     public void setServer(Server server) {
         this.server = server;
+    }
+
+    public Map<String, String> getInterfaceApplicationMapping() {
+        return interfaceApplicationMapping;
+    }
+
+    public GrpcProperties setInterfaceApplicationMapping(Map<String, String> interfaceApplicationMapping) {
+        this.interfaceApplicationMapping = interfaceApplicationMapping;
+        return this;
     }
 
     public static class Client {

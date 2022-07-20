@@ -52,33 +52,38 @@ public class GrpcStubFactoryBean<T extends AbstractStub<T>> implements FactoryBe
                 }
             }
         };
+        String application = findApplication();
+        if (application == null) {
+            throw new IllegalArgumentException(stubType.getName() + " does not configure the target application name");
+        }
+        LoadBalancerClient loadBalancerClient = applicationContext.getBean(LoadBalancerClient.class);
+        GrpcContext grpcContext = applicationContext.getBean(GrpcContext.class);
+        ClientInterceptor interceptor = new GrpcReactiveClientInterceptor(() ->
+                new LoadBalancerGrpcClientInterceptor(application,
+                        loadBalancerClient,
+                        grpcContext.getInstance(application, GrpcChannelManager.class)));
+        return AbstractStub.newStub(stubFactory,
+                ManagedChannelBuilder.forTarget(application)
+                        .intercept(interceptor)
+                        .build());
+    }
+
+    private String findApplication() throws Exception {
         String stubTypeName = stubType.getName();
         String grpcClassName = stubTypeName.substring(0, stubTypeName.indexOf("$"));
         Class<?> grpcClass = ClassUtils.resolveClassName(grpcClassName, ClassUtils.getDefaultClassLoader());
-        Map<String, ApplicationMapping> mappingMap = applicationContext.getBeansOfType(ApplicationMapping.class);
-        List<ApplicationMapping> mappings = new ArrayList<>(mappingMap.values());
-        AnnotationAwareOrderComparator.sort(mappings);
+        String interfaceServiceName = (String) grpcClass.getDeclaredField("SERVICE_NAME").get(null);
+        Map<String, ApplicationFinder> finderMap = applicationContext.getBeansOfType(ApplicationFinder.class);
+        List<ApplicationFinder> finders = new ArrayList<>(finderMap.values());
+        AnnotationAwareOrderComparator.sort(finders);
         String application = null;
-        for (ApplicationMapping applicationMapping : mappings) {
-            application = applicationMapping.getApplication(grpcClass);
+        for (ApplicationFinder applicationFinder : finders) {
+            application = applicationFinder.findApplication(interfaceServiceName);
             if (StringUtils.hasText(application)) {
                 break;
             }
         }
-        if (application == null) {
-            throw new IllegalArgumentException(grpcClassName + " does not configure the target application name");
-        }
-        final String targetApplication = application;
-        LoadBalancerClient loadBalancerClient = applicationContext.getBean(LoadBalancerClient.class);
-        GrpcContext grpcContext = applicationContext.getBean(GrpcContext.class);
-        ClientInterceptor interceptor = new GrpcReactiveClientInterceptor(() ->
-                new LoadBalancerGrpcClientInterceptor(targetApplication,
-                        loadBalancerClient,
-                        grpcContext.getInstance(targetApplication, GrpcChannelManager.class)));
-        return AbstractStub.newStub(stubFactory,
-                ManagedChannelBuilder.forTarget(targetApplication)
-                        .intercept(interceptor)
-                        .build());
+        return application;
     }
 
     @Override

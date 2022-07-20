@@ -47,6 +47,11 @@
       "type": "java.lang.Integer",
       "description": "the maximum number of requests that grpc client can transmit.",
       "defaultValue": "8MB"
+    },
+    {
+      "name": "grpc.interface-application-mapping",
+      "type": "java.util.Map",
+      "description": "interface-application name mapping table."
     }
   ]
 }

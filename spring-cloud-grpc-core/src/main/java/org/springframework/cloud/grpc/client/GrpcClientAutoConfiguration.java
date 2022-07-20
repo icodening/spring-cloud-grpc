@@ -36,4 +36,10 @@ public class GrpcClientAutoConfiguration {
         return new GrpcJacksonMessageSerializer(objectMapper);
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    public ConfigurableApplicationFinder configurableApplicationMapping(GrpcProperties grpcProperties) {
+        return new ConfigurableApplicationFinder(grpcProperties);
+    }
+
 }
