@@ -36,6 +36,9 @@ public abstract class AbstractLoadBalancerGrpcClientInterceptor implements Clien
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel channel) {
         String application = determineApplication(method, callOptions, channel);
         ServiceInstance serviceInstance = loadBalancerClient.choose(application);
+        if (serviceInstance == null) {
+            throw new IllegalStateException("No instances available for " + application);
+        }
         String host = serviceInstance.getHost();
         String port = serviceInstance.getMetadata().get(GRPC_PORT_KEY);
         if (LOGGER.isDebugEnabled()) {
