@@ -14,10 +14,10 @@ a grpc service consumer of ``OrderService``
 
 # usage
 ### 1. compile project
-### 2. start ``service-registry(Eureka/Nacos/...)``
-### 3. start ``example-grpc-service``
-### 4. start ``example-grpc-consumer``
-### 5. request ``http://localhost:9191/orders/1``
+### 2. run ``service-registry(Eureka/Nacos/...)``
+### 3. run ``example-grpc-service``
+### 4. run ``example-grpc-consumer``
+### 5. send request ``http://localhost:9191/orders/1``
 The successful result is as follows
 ````json
 {
