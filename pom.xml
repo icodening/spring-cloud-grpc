@@ -12,6 +12,7 @@
     </parent>
     <modules>
         <module>spring-cloud-grpc-core</module>
+        <module>spring-cloud-grpc-examples</module>
         <module>spring-cloud-starter-grpc</module>
     </modules>
 

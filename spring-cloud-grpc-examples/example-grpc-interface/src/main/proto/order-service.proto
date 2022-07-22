@@ -1,0 +1,19 @@
+syntax = "proto3";
+option java_package = "example.grpc.api";
+service OrderService {
+  rpc queryOrder (Query) returns (Order) {}
+}
+message Order {
+  string id = 1;
+  int32 price = 2;
+  repeated Product product = 3;
+  int64 gmtCreate = 4;
+}
+
+message Query {
+  string id = 1;
+}
+message Product {
+  string name = 1;
+  int32 price = 2;
+}
