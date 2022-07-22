@@ -2,6 +2,7 @@ package org.springframework.cloud.grpc.loadbalancer;
 
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
@@ -12,6 +13,7 @@ import org.springframework.cloud.grpc.client.ConfigurableGrpcChannelFactoryCusto
 import org.springframework.cloud.grpc.client.DefaultChannelCustomizer;
 import org.springframework.cloud.grpc.client.DefaultConfigurableGrpcChannelFactory;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
+import org.springframework.cloud.loadbalancer.core.ReactorLoadBalancer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
@@ -21,6 +23,7 @@ import java.util.List;
  * @author icodening
  * @date 2022.07.13
  */
+@ConditionalOnClass({LoadBalancerClient.class, ReactorLoadBalancer.class})
 public class GrpcClientLoadBalancerConfiguration {
 
     @Bean
