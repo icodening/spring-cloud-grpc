@@ -20,6 +20,7 @@
         <dependency>
             <groupId>com.icodening.cloud</groupId>
             <artifactId>spring-cloud-grpc-core</artifactId>
+            <version>${revision}</version>
         </dependency>
     </dependencies>
 
