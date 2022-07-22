@@ -52,6 +52,11 @@
       "name": "grpc.interface-application-mapping",
       "type": "java.util.Map",
       "description": "interface-application name mapping table."
+    },
+    {
+      "name": "grpc.hazelcast.port",
+      "type": "java.lang.Integer",
+      "description": "the hazelcast instance port, default value is [30000,65536)."
     }
   ]
 }

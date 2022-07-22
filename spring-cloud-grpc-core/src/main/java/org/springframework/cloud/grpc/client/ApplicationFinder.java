@@ -1,6 +1,7 @@
 package org.springframework.cloud.grpc.client;
 
 /**
+ * the [service - application] mapping
  * @author icodening
  * @date 2022.07.20
  */

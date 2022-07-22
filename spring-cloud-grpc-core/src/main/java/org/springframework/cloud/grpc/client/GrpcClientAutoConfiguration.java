@@ -38,7 +38,7 @@ public class GrpcClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ConfigurableApplicationFinder configurableApplicationMapping(GrpcProperties grpcProperties) {
+    public ConfigurableApplicationFinder configurableApplicationFinder(GrpcProperties grpcProperties) {
         return new ConfigurableApplicationFinder(grpcProperties);
     }
 
