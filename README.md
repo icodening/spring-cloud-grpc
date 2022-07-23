@@ -1,10 +1,13 @@
 # spring-cloud-grpc
+
 An easy-to-use remote invocation solution based on Spring Cloud and grpc
 
 # Quick Start
+
 1. Add Spring Cloud Grpc to the classpath of a Spring Boot application
 
 ````xml
+
 <dependencies>
     <dependency>
         <groupId>org.springframework.boot</groupId>
@@ -26,6 +29,7 @@ An easy-to-use remote invocation solution based on Spring Cloud and grpc
 2. add annotation ``@EnableGrpc`` to spring application
 
 ````java
+
 @EnableGrpc
 @SpringBootApplication
 public class ExampleApplication {
@@ -37,9 +41,11 @@ public class ExampleApplication {
 }
 ````
 
-3. add ``@Autowired`` annotation to grpc stub
+3. add ``@Autowired`` annotation to grpc stub(``consumer side``)
 
 ````java
+import org.springframework.beans.factory.annotation.Autowired;
+
 @RestController
 @RequestMapping("/foo")
 public class FooController {
@@ -54,5 +60,17 @@ public class FooController {
     private FooServiceGrpc.FooServiceStub fooServiceStub;
 
     // to use
+}
+````
+
+4. add ``@Service`` annotation to grpc service impl(``provider side``)
+
+````java
+import org.springframework.stereotype.Service;
+
+@Service
+public class FooServiceImpl extends FooServiceGrpc.FooServiceImplBase {
+
+    //business
 }
 ````
