@@ -10,6 +10,10 @@ An easy-to-use remote invocation solution based on Spring Cloud and grpc
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
     <!-- spring cloud grpc -->
     <dependency>
         <groupId>com.icodening.cloud</groupId>
