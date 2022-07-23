@@ -12,6 +12,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.grpc.GrpcContext;
 import org.springframework.cloud.grpc.support.GrpcReactiveClientInterceptor;
 import org.springframework.cloud.grpc.support.LazyApplicationLoadBalancerInterceptor;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -57,10 +58,12 @@ public class GrpcStubFactoryBean<T extends AbstractStub<T>> implements FactoryBe
         };
         String serviceName = getServiceName();
         LoadBalancerClient loadBalancerClient = applicationContext.getBean(LoadBalancerClient.class);
+        LoadBalancerClientFactory loadBalancerClientFactory = applicationContext.getBean(LoadBalancerClientFactory.class);
         Supplier<String> applicationSupplier = applicationSupplier();
         ClientInterceptor interceptor = new GrpcReactiveClientInterceptor(() ->
                 new LazyApplicationLoadBalancerInterceptor(applicationSupplier, loadBalancerClient)
-                        .setGrpcChannelManagerSupplier(grpcChannelManagerSupplier(applicationSupplier)));
+                        .setGrpcChannelManagerSupplier(grpcChannelManagerSupplier(applicationSupplier))
+                        .setLoadBalancerClientFactory(loadBalancerClientFactory));
         return AbstractStub.newStub(stubFactory,
                 ManagedChannelBuilder.forTarget(serviceName)
                         .intercept(interceptor)

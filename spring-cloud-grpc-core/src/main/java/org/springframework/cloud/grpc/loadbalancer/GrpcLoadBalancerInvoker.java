@@ -12,6 +12,7 @@ import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
 import org.springframework.cloud.grpc.client.GrpcClientInvoker;
 import org.springframework.cloud.grpc.support.DirectApplicationLoadBalancerInterceptor;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -35,14 +36,17 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
 
     public GrpcLoadBalancerInvoker(String application, LoadBalancerClient loadBalancerClient,
                                    GrpcMessageSerializer grpcMessageSerializer,
-                                   GrpcChannelManager grpcChannelManager) {
+                                   GrpcChannelManager grpcChannelManager,
+                                   LoadBalancerClientFactory loadBalancerClientFactory) {
         Assert.notNull(application, "application can not be null");
         Assert.notNull(loadBalancerClient, "LoadBalancerClient can not be null");
         Assert.notNull(grpcMessageSerializer, "GrpcMessageConverter can not be null");
         this.application = application;
         this.grpcMessageSerializer = grpcMessageSerializer;
         Channel fakeChannel = ManagedChannelBuilder.forTarget(application)
-                .intercept(new DirectApplicationLoadBalancerInterceptor(application, loadBalancerClient).setGrpcChannelManager(grpcChannelManager))
+                .intercept(new DirectApplicationLoadBalancerInterceptor(application, loadBalancerClient)
+                        .setGrpcChannelManager(grpcChannelManager)
+                        .setLoadBalancerClientFactory(loadBalancerClientFactory))
                 .build();
         this.futureStub = ExchangerGrpc.newFutureStub(fakeChannel);
     }

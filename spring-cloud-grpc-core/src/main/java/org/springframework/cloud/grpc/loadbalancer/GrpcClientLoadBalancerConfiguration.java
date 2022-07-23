@@ -14,6 +14,7 @@ import org.springframework.cloud.grpc.client.DefaultChannelCustomizer;
 import org.springframework.cloud.grpc.client.DefaultConfigurableGrpcChannelFactory;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
 import org.springframework.cloud.loadbalancer.core.ReactorLoadBalancer;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
@@ -30,9 +31,11 @@ public class GrpcClientLoadBalancerConfiguration {
     @ConditionalOnBean(LoadBalancerClient.class)
     public GrpcLoadBalancerInvoker grpcLoadBalancerInterceptor(GrpcMessageSerializer grpcMessageSerializer,
                                                                LoadBalancerClient loadBalancerClient,
-                                                               Environment environment, GrpcChannelManager grpcChannelManager) {
+                                                               Environment environment,
+                                                               GrpcChannelManager grpcChannelManager,
+                                                               LoadBalancerClientFactory loadBalancerClientFactory) {
         String grpcClientName = environment.getProperty("grpc.client.name");
-        return new GrpcLoadBalancerInvoker(grpcClientName, loadBalancerClient, grpcMessageSerializer, grpcChannelManager);
+        return new GrpcLoadBalancerInvoker(grpcClientName, loadBalancerClient, grpcMessageSerializer, grpcChannelManager, loadBalancerClientFactory);
     }
 
     @Bean
