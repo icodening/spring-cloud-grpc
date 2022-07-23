@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -34,23 +36,42 @@ public class OrderController {
     @Autowired
     private OrderServiceGrpc.OrderServiceFutureStub orderServiceFutureStub;
 
+    /**
+     * query order by orderId
+     *
+     * @param orderId order id
+     * @param type    grpc stub type. e.g blocking, future
+     * @return
+     */
     @GetMapping("/{orderId}")
-    public Object queryOrder(@PathVariable(name = "orderId") String orderId) {
+    public Object queryOrder(@PathVariable(name = "orderId") String orderId,
+                             @RequestParam(name = "type", required = false, defaultValue = "blocking") String type) {
         OrderServiceOuterClass.Query query = OrderServiceOuterClass.Query.newBuilder().setId(orderId).build();
+        if ("future".equals(type)) {
+            return queryByFutureStub(query);
+        }
+        return queryByBlockStub(query);
+    }
+
+    private Object queryByBlockStub(OrderServiceOuterClass.Query query) {
         OrderServiceOuterClass.Order order = orderServiceBlockingStub.queryOrder(query);
+        return orderToMap(order);
+    }
+
+    private Object queryByFutureStub(OrderServiceOuterClass.Query query) {
         ListenableFuture<OrderServiceOuterClass.Order> orderListenableFuture = orderServiceFutureStub.queryOrder(query);
-        orderListenableFuture.addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    OrderServiceOuterClass.Order futureResult = orderListenableFuture.get();
-                    logger.info("queryOrder success via OrderServiceFutureStub: {}", OrderController.this.orderToMap(futureResult));
-                } catch (InterruptedException | ExecutionException e) {
-                    logger.error(e.getMessage(), e);
-                }
+        CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+        orderListenableFuture.addListener(() -> {
+            try {
+                OrderServiceOuterClass.Order futureResult = orderListenableFuture.get();
+                Map<String, Object> result = OrderController.this.orderToMap(futureResult);
+                logger.info("queryOrder success via OrderServiceFutureStub: {}", result);
+                completableFuture.complete(result);
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error(e.getMessage(), e);
             }
         }, ForkJoinPool.commonPool());
-        return orderToMap(order);
+        return completableFuture;
     }
 
     private Map<String, Object> orderToMap(OrderServiceOuterClass.Order order) {
