@@ -2,6 +2,7 @@ package org.springframework.cloud.grpc.client;
 
 import io.grpc.ClientInterceptor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.cloud.grpc.GrpcProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -29,7 +30,7 @@ public class DefaultChannelCustomizer implements ConfigurableGrpcChannelFactoryC
                 .maxInboundMessageSize((int) clientProperties.getMaxInboundMessageSize().toBytes())
                 .usePlainText(clientProperties.isUsePlainText());
         if (applicationContext != null) {
-            Map<String, ClientInterceptor> clientInterceptorMap = applicationContext.getBeansOfType(ClientInterceptor.class);
+            Map<String, ClientInterceptor> clientInterceptorMap = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ClientInterceptor.class);
             configurableGrpcChannelFactory.intercept(clientInterceptorMap.values());
         }
     }
