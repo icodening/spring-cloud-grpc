@@ -1,2 +1,5 @@
+spring:
+  application:
+    name: grpc-consumer
 server:
   port: 9191

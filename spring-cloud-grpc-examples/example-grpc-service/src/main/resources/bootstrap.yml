@@ -1,3 +1,6 @@
+spring:
+  application:
+    name: grpc-provider
 server:
   port: 9090
 grpc:
