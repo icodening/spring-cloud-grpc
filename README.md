@@ -19,7 +19,7 @@ An easy-to-use remote invocation solution based on Spring Cloud and grpc
 </dependencies>
 ````
 
-2. add annotation @EnableGrpc to spring application
+2. add annotation ``@EnableGrpc`` to spring application
 
 ````java
 @EnableGrpc
