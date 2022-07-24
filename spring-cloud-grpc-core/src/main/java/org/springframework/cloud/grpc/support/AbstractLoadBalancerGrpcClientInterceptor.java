@@ -24,6 +24,8 @@ import org.springframework.util.Assert;
 
 import java.util.Set;
 
+import static org.springframework.cloud.grpc.support.GrpcCallOptions.APPLICATION;
+
 /**
  * @author icodening
  * @date 2022.07.15
@@ -62,6 +64,7 @@ public abstract class AbstractLoadBalancerGrpcClientInterceptor implements Clien
         if (serviceInstance == null) {
             throw new IllegalStateException("No instances available for " + application);
         }
+        callOptions = callOptions.withOption(APPLICATION, application);
         String host = serviceInstance.getHost();
         String port = serviceInstance.getMetadata().get(GRPC_PORT_KEY);
         if (LOGGER.isDebugEnabled()) {
