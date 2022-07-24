@@ -1,6 +1,5 @@
 package example.grpc.configuration;
 
-import com.alibaba.csp.sentinel.adapter.grpc.SentinelGrpcClientInterceptor;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -25,11 +24,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class GrpcCommonConfiguration {
-
-    @Bean
-    public SentinelGrpcClientInterceptor sentinelGrpcClientInterceptor() {
-        return new SentinelGrpcClientInterceptor();
-    }
 
     @Bean
     public ClientInterceptor statisticTimeInterceptor() {

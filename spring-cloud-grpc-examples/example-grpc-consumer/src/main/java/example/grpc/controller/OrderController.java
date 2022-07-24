@@ -69,6 +69,7 @@ public class OrderController {
                 completableFuture.complete(result);
             } catch (InterruptedException | ExecutionException e) {
                 logger.error(e.getMessage());
+                throw new RuntimeException(e);
             }
         }, ForkJoinPool.commonPool());
         return completableFuture;
