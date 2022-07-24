@@ -1,6 +1,7 @@
 package org.springframework.cloud.grpc.circuitbreaker.resilience4j;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.grpc.circuitbreaker.AbstractGrpcCircuitBreakerFactory;
@@ -21,7 +22,8 @@ public class Resilience4jGrpcCircuitBreakerFactory
     protected GrpcCircuitBreaker doCreateGrpcCircuitBreaker(String application, String fullMethodName) {
         CircuitBreakerRegistry circuitBreakerRegistry = getCircuitBreakerFactory().getCircuitBreakerRegistry();
         String key = application + "/" + fullMethodName;
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(key, key);
+        CircuitBreakerConfig config = circuitBreakerRegistry.getConfiguration(key).orElse(CircuitBreakerConfig.ofDefaults());
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(key, config);
         return new Resilience4jGrpcCircuitBreaker(circuitBreaker);
     }
 }
