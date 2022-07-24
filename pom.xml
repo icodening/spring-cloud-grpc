@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-build</artifactId>
-        <version>3.0.1</version>
+        <version>3.0.5</version>
         <relativePath/>
     </parent>
     <modules>
@@ -31,7 +31,9 @@
 
         <spring.boot.version>2.5.14</spring.boot.version>
         <spring.cloud.version>2020.0.5</spring.cloud.version>
+        <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
         <grpc.version>1.47.0</grpc.version>
+        <sentinel.version>1.8.0</sentinel.version>
     </properties>
 
 
@@ -52,9 +54,21 @@
                 <type>pom</type>
             </dependency>
             <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring.cloud.alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-all</artifactId>
                 <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-grpc-adapter</artifactId>
+                <version>${sentinel.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
