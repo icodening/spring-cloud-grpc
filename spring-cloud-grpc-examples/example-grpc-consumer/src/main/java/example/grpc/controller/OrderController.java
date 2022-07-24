@@ -68,7 +68,7 @@ public class OrderController {
                 logger.info("queryOrder success via OrderServiceFutureStub: {}", result);
                 completableFuture.complete(result);
             } catch (InterruptedException | ExecutionException e) {
-                logger.error(e.getMessage(), e);
+                logger.error(e.getMessage());
             }
         }, ForkJoinPool.commonPool());
         return completableFuture;
