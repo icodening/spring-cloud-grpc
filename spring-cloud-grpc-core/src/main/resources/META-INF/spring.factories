@@ -2,4 +2,5 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   org.springframework.cloud.grpc.client.GrpcClientAutoConfiguration,\
   org.springframework.cloud.grpc.loadbalancer.GrpcLoadBalancerConfiguration,\
   org.springframework.cloud.grpc.server.GrpcServiceAutoConfiguration,\
-  org.springframework.cloud.grpc.hazelcast.HazelcastGrpcAutoConfiguration
+  org.springframework.cloud.grpc.hazelcast.HazelcastGrpcAutoConfiguration,\
+  org.springframework.cloud.grpc.circuitbreaker.GrpcCircuitBreakerAutoConfiguration
