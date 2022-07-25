@@ -4,6 +4,6 @@ spring:
   cloud:
     circuitbreaker:
       sentinel:
-        enabled: true
+        enabled: false
 server:
   port: 9191
