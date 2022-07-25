@@ -1,6 +1,7 @@
 package org.springframework.cloud.grpc.server;
 
 import io.grpc.BindableService;
+import io.grpc.ServerInterceptor;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.grpc.GrpcProperties;
 import org.springframework.context.ApplicationContext;
@@ -8,6 +9,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author icodening
@@ -30,16 +32,19 @@ public class DefaultGrpcServerFactoryCustomizer implements ConfigurableGrpcServe
                 .corePoolSize(serverProperties.getCorePoolSize())
                 .maximumPoolSize(serverProperties.getMaximumPoolSize())
                 .threadsQueue(serverProperties.getThreadsQueue());
-        if (applicationContext != null) {
-            Map<String, BindableService> bindableServiceMap = applicationContext.getBeansOfType(BindableService.class);
-            for (BindableService bindableService : bindableServiceMap.values()) {
-                factory.addService(bindableService);
-            }
-        }
+        consumeBeansByType(BindableService.class, factory::addService);
+        consumeBeansByType(ServerInterceptor.class, factory::intercept);
     }
 
     @Override
     public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+
+    private <T> void consumeBeansByType(Class<T> type, Consumer<Iterable<T>> consumer) {
+        if (applicationContext != null) {
+            Map<String, T> beanMap = applicationContext.getBeansOfType(type);
+            consumer.accept(beanMap.values());
+        }
     }
 }

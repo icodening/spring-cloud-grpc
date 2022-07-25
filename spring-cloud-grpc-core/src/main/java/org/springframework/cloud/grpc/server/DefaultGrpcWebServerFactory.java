@@ -2,6 +2,7 @@ package org.springframework.cloud.grpc.server;
 
 import io.grpc.BindableService;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ public class DefaultGrpcWebServerFactory implements ConfigurableGrpcServerFactor
     private int maxInboundMessageSize;
 
     private final List<BindableService> bindableServices = new ArrayList<>();
+
+    private final List<ServerInterceptor> interceptors = new ArrayList<>();
 
     private int maximumPoolSize = 1;
 
@@ -70,6 +73,12 @@ public class DefaultGrpcWebServerFactory implements ConfigurableGrpcServerFactor
     }
 
     @Override
+    public ConfigurableGrpcServerFactory intercept(ServerInterceptor interceptor) {
+        interceptors.add(interceptor);
+        return this;
+    }
+
+    @Override
     public GrpcWebServer getWebServer() {
         ServerBuilder<?> serverBuilder = ServerBuilder.forPort(port)
                 .maxInboundMessageSize(maxInboundMessageSize);
@@ -87,6 +96,7 @@ public class DefaultGrpcWebServerFactory implements ConfigurableGrpcServerFactor
             }
             serverBuilder.executor(threadPoolExecutor);
         }
+        interceptors.forEach(serverBuilder::intercept);
         return new DefaultGrpcWebServer(serverBuilder.build());
     }
 }
