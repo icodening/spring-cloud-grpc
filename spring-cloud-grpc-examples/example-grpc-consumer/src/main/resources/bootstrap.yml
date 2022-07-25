@@ -1,5 +1,9 @@
 spring:
   application:
     name: grpc-consumer
+  cloud:
+    circuitbreaker:
+      sentinel:
+        enabled: true
 server:
   port: 9191
