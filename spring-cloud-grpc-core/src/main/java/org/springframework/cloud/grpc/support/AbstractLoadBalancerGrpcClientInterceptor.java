@@ -8,6 +8,7 @@ import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.grpc.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.ServiceInstance;
@@ -95,6 +96,14 @@ public abstract class AbstractLoadBalancerGrpcClientInterceptor implements Clien
                                 supportedLifecycleProcessors
                                         .forEach(lifecycle -> lifecycle.onComplete(new CompletionContext<>(CompletionContext.Status.SUCCESS,
                                                 lbRequest, new DefaultResponse(serviceInstance), message)));
+                            }
+
+                            @Override
+                            public void onClose(Status status, Metadata trailers) {
+                                if (!status.isOk()) {
+                                    status = status.withCause(new RuntimeException(status.getDescription()));
+                                }
+                                super.onClose(status, trailers);
                             }
                         };
                 super.start(newListener, headers);

@@ -1,9 +1,9 @@
 package org.springframework.cloud.grpc.loadbalancer;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.grpc.ExchangerGrpc;
@@ -17,6 +17,7 @@ import org.springframework.cloud.grpc.support.GrpcCallOptions;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -34,7 +35,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
 
     private final GrpcMessageSerializer grpcMessageSerializer;
 
-    private final ExchangerGrpc.ExchangerFutureStub futureStub;
+    private final ExchangerGrpc.ExchangerStub asyncStub;
 
     public GrpcLoadBalancerInvoker(String application, LoadBalancerClient loadBalancerClient,
                                    GrpcMessageSerializer grpcMessageSerializer,
@@ -50,7 +51,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
                         .setGrpcChannelManager(grpcChannelManager)
                         .setLoadBalancerClientFactory(loadBalancerClientFactory))
                 .build();
-        this.futureStub = ExchangerGrpc.newFutureStub(fakeChannel)
+        this.asyncStub = ExchangerGrpc.newStub(fakeChannel)
                 .withOption(GrpcCallOptions.APPLICATION, application);
     }
 
@@ -58,42 +59,46 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
     @Override
     public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
         GrpcExchanger.Request grpcRequest = buildRequest(invocation);
-        ListenableFuture<GrpcExchanger.Response> grpcResponse = futureStub
-                .withOption(GrpcCallOptions.SERVICE, invocation.getMethod().getDeclaringClass().getSimpleName())
+        CompletableFuture<Object> objectCompletableFuture = new CompletableFuture<>();
+        asyncStub.withOption(GrpcCallOptions.SERVICE, invocation.getMethod().getDeclaringClass().getSimpleName())
                 .withOption(GrpcCallOptions.METHOD, invocation.getMethod().getName())
-                .exchange(grpcRequest);
-        Class<?> returnType = invocation.getMethod().getReturnType();
-        if (CompletableFuture.class.isAssignableFrom(returnType)) {
-            CompletableFuture<Object> returnCompletableFuture = new CompletableFuture<>();
-            grpcResponse.addListener(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        //TODO optimize
-                        GrpcExchanger.Response responseMessage = grpcResponse.get();
+                .withExecutor(ForkJoinPool.commonPool())
+                .exchange(grpcRequest, new StreamObserver<GrpcExchanger.Response>() {
+                    @Override
+                    public void onNext(GrpcExchanger.Response responseMessage) {
                         String isNullFlag = responseMessage.getMetadataOrDefault(GrpcExchangeMetadata.IS_NULL, Boolean.FALSE.toString());
                         if (Boolean.parseBoolean(isNullFlag)) {
-                            returnCompletableFuture.complete(null);
+                            objectCompletableFuture.complete(null);
                             return;
                         }
                         String actualType = responseMessage.getMetadataMap().get(GrpcExchangeMetadata.ACTUAL_TYPE);
-                        Class<?> type = ClassUtils.resolveClassName(actualType, ClassUtils.getDefaultClassLoader());
+                        Class<?> type = invocation.getMethod().getReturnType();
+                        if (StringUtils.hasText(actualType)) {
+                            type = ClassUtils.resolveClassName(actualType, ClassUtils.getDefaultClassLoader());
+                        }
                         Object response = grpcMessageSerializer.deserialize(responseMessage.getMessage().toByteArray(), type);
-                        returnCompletableFuture.complete(response);
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new RuntimeException(e);
+                        objectCompletableFuture.complete(response);
                     }
-                }
-                //TODO customize executor
-            }, ForkJoinPool.commonPool());
-            return returnCompletableFuture;
+
+                    @Override
+                    public void onError(Throwable t) {
+                        objectCompletableFuture.completeExceptionally(t);
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        System.out.println("complete");
+                    }
+                });
+        Class<?> returnType = invocation.getMethod().getReturnType();
+        if (CompletableFuture.class.isAssignableFrom(returnType)) {
+            return objectCompletableFuture;
         }
-        GrpcExchanger.Response responseMessage = grpcResponse.get();
-        String isNullFlag = responseMessage.getMetadataOrDefault(GrpcExchangeMetadata.IS_NULL, Boolean.FALSE.toString());
-        if (Boolean.parseBoolean(isNullFlag)) {
-            return null;
+        try {
+            return objectCompletableFuture.get();
+        } catch (ExecutionException e) {
+            throw e.getCause();
         }
-        return grpcMessageSerializer.deserialize(responseMessage.getMessage().toByteArray(), returnType);
     }
 
     @Override

@@ -1,12 +1,15 @@
 package org.springframework.cloud.grpc.server;
 
 import com.google.protobuf.ByteString;
+import io.grpc.Metadata;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.cloud.grpc.ExchangerGrpc;
 import org.springframework.cloud.grpc.GrpcExchanger;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.GrpcServiceRegistry;
 import org.springframework.cloud.grpc.internal.GrpcExchangeMetadata;
+import org.springframework.cloud.grpc.support.GrpcMetaData;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -56,7 +59,16 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
             responseObserver.onError(new RuntimeException("method not found"));
             return;
         }
-        Object returnValue = ReflectionUtils.invokeMethod(method, serviceImpl, args);
+        Object returnValue = null;
+        try {
+            returnValue = ReflectionUtils.invokeMethod(method, serviceImpl, args);
+        } catch (Throwable e) {
+            Metadata metadata = new Metadata();
+            metadata.put(GrpcMetaData.EXCEPTION_TYPE, e.getClass().getName());
+            Status status = Status.UNAVAILABLE.withDescription(e.getMessage());
+            responseObserver.onError(status.asException(metadata));
+            return;
+        }
         if (returnValue == null) {
             GrpcExchanger.Response.Builder responseMessageBuilder = GrpcExchanger.Response.newBuilder();
             GrpcExchanger.Response nullResponse = responseMessageBuilder
