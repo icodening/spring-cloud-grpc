@@ -3,6 +3,12 @@ resilience4j:
   circuitbreaker:
     configs:
       "[grpc-provider/OrderService/queryOrder]":
-        failureRateThreshold: 80
+        failureRateThreshold: 99
         slowCallDurationThreshold: 500
         slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 1
+      "[grpc-provider/AccountService/getAccount]":
+        failureRateThreshold: 99
+        slowCallDurationThreshold: 500
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 1

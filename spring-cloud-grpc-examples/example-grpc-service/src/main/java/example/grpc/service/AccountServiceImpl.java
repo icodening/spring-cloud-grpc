@@ -33,7 +33,11 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account getAccount(Long id) {
-        return accountMap.get(id);
+        Account account = accountMap.get(id);
+        if (account == null) {
+            throw new RuntimeException("no such account [id=" + id + "]");
+        }
+        return account;
     }
 
     @Override
