@@ -12,6 +12,7 @@ import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
 import org.springframework.cloud.grpc.client.GrpcClientInvoker;
 import org.springframework.cloud.grpc.support.DirectApplicationLoadBalancerInterceptor;
+import org.springframework.cloud.grpc.support.GrpcCallOptions;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -48,14 +49,18 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
                         .setGrpcChannelManager(grpcChannelManager)
                         .setLoadBalancerClientFactory(loadBalancerClientFactory))
                 .build();
-        this.futureStub = ExchangerGrpc.newFutureStub(fakeChannel);
+        this.futureStub = ExchangerGrpc.newFutureStub(fakeChannel)
+                .withOption(GrpcCallOptions.APPLICATION, application);
     }
 
     @Nullable
     @Override
     public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
-        GrpcExchanger.Message grpcRequest = buildRequest(invocation);
-        ListenableFuture<GrpcExchanger.Message> grpcResponse = futureStub.exchange(grpcRequest);
+        GrpcExchanger.Request grpcRequest = buildRequest(invocation);
+        ListenableFuture<GrpcExchanger.Response> grpcResponse = futureStub
+                .withOption(GrpcCallOptions.SERVICE, invocation.getMethod().getDeclaringClass().getSimpleName())
+                .withOption(GrpcCallOptions.METHOD, invocation.getMethod().getName())
+                .exchange(grpcRequest);
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (CompletableFuture.class.isAssignableFrom(returnType)) {
             CompletableFuture<Object> returnCompletableFuture = new CompletableFuture<>();
@@ -64,7 +69,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
                 public void run() {
                     try {
                         //TODO optimize
-                        GrpcExchanger.Message responseMessage = grpcResponse.get();
+                        GrpcExchanger.Response responseMessage = grpcResponse.get();
                         String actualType = responseMessage.getMetadataMap().get("actualType");
                         Class<?> type = ClassUtils.resolveClassName(actualType, ClassUtils.getDefaultClassLoader());
                         Object response = grpcMessageSerializer.deserialize(responseMessage.getMessage().toByteArray(), type);
@@ -77,7 +82,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
             }, ForkJoinPool.commonPool());
             return returnCompletableFuture;
         }
-        GrpcExchanger.Message responseMessage = grpcResponse.get();
+        GrpcExchanger.Response responseMessage = grpcResponse.get();
         return grpcMessageSerializer.deserialize(responseMessage.getMessage().toByteArray(), returnType);
     }
 
@@ -86,28 +91,27 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
         return this.application;
     }
 
-    private GrpcExchanger.Message buildRequest(MethodInvocation invocation) {
-        GrpcExchanger.Message.Builder requestBuilder = GrpcExchanger.Message.newBuilder();
+    private GrpcExchanger.Request buildRequest(MethodInvocation invocation) {
+        GrpcExchanger.Request.Builder requestBuilder = GrpcExchanger.Request.newBuilder();
         determineInterface(requestBuilder, invocation);
         determineMethod(requestBuilder, invocation);
-        determineParameterTypes(requestBuilder, invocation);
-        byte[] arguments = grpcMessageSerializer.serialize(invocation.getArguments());
-        requestBuilder.setMessage(ByteString.copyFrom(arguments));
+        determineParameterMap(requestBuilder, invocation);
         return requestBuilder.build();
     }
 
-    private void determineInterface(GrpcExchanger.Message.Builder request, MethodInvocation invocation) {
+    private void determineInterface(GrpcExchanger.Request.Builder request, MethodInvocation invocation) {
         request.setInterfaceType(invocation.getMethod().getDeclaringClass().getName());
     }
 
-    private void determineMethod(GrpcExchanger.Message.Builder requestBuilder, MethodInvocation invocation) {
+    private void determineMethod(GrpcExchanger.Request.Builder requestBuilder, MethodInvocation invocation) {
         requestBuilder.setMethodName(invocation.getMethod().getName());
     }
 
-    private void determineParameterTypes(GrpcExchanger.Message.Builder requestBuilder, MethodInvocation invocation) {
+    private void determineParameterMap(GrpcExchanger.Request.Builder requestBuilder, MethodInvocation invocation) {
         Class<?>[] parameterTypes = invocation.getMethod().getParameterTypes();
-        for (Class<?> parameterType : parameterTypes) {
-            requestBuilder.addParameterType(parameterType.getName());
+        for (int i = 0; i < parameterTypes.length; i++) {
+            byte[] serialized = grpcMessageSerializer.serialize(invocation.getArguments()[i]);
+            requestBuilder.putParameters(parameterTypes[i].getName(), ByteString.copyFrom(serialized));
         }
     }
 }

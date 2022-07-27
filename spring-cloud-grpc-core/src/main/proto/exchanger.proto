@@ -2,9 +2,16 @@ syntax = "proto3";
 option java_package = "org.springframework.cloud.grpc";
 option java_outer_classname = "GrpcExchanger";
 service Exchanger {
-  rpc exchange (Message) returns (Message) {}
+  rpc exchange (Request) returns (Response) {}
 }
-message Message {
+message Request {
+  string interfaceType = 1;
+  string methodName = 2;
+  map<string, string> metadata = 3;
+  map<string, bytes> parameters = 4;
+}
+
+message Response {
   string interfaceType = 1;
   string methodName = 2;
   repeated string parameterType = 3;

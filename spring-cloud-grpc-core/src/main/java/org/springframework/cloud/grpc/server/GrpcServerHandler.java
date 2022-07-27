@@ -10,6 +10,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -31,7 +32,7 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
      * FIXME refactor and optimize
      */
     @Override
-    public void exchange(GrpcExchanger.Message request, StreamObserver<GrpcExchanger.Message> responseObserver) {
+    public void exchange(GrpcExchanger.Request request, StreamObserver<GrpcExchanger.Response> responseObserver) {
         String interfaceTypeString = request.getInterfaceType();
         Class<?> interfaceType = ClassUtils.resolveClassName(interfaceTypeString, ClassUtils.getDefaultClassLoader());
         Object serviceImpl = grpcServiceRegistry.getService(interfaceType);
@@ -43,15 +44,17 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
         }
         String methodName = request.getMethodName();
         Class<?>[] paramTypes = new Class[request.getParameterTypeCount()];
-        for (int i = 0; i < request.getParameterTypeCount(); i++) {
-            paramTypes[i] = ClassUtils.resolveClassName(request.getParameterType(i), ClassUtils.getDefaultClassLoader());
+        Object[] args = new Object[request.getParameterTypeCount()];
+        int index = 0;
+        for (Map.Entry<String, ByteString> entry : request.getParametersMap().entrySet()) {
+            paramTypes[index] = ClassUtils.resolveClassName(entry.getKey(), ClassUtils.getDefaultClassLoader());
+            args[index] = grpcMessageSerializer.deserialize(entry.getValue().toByteArray(), paramTypes[index]);
         }
         Method method = ReflectionUtils.findMethod(interfaceType, methodName, paramTypes);
         if (method == null) {
             responseObserver.onError(new RuntimeException("method not found"));
             return;
         }
-        Object[] args = grpcMessageSerializer.deserialize(request.getMessage().toByteArray(), Object[].class);
         Object returnValue = ReflectionUtils.invokeMethod(method, serviceImpl, args);
         if (returnValue == null) {
             responseObserver.onCompleted();
@@ -60,22 +63,22 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
         if (CompletableFuture.class.isAssignableFrom(method.getReturnType())) {
             CompletableFuture<?> returnCompletableFuture = ((CompletableFuture<?>) returnValue);
             returnCompletableFuture.thenAccept((actualReturnValue) -> {
-                GrpcExchanger.Message.Builder responseMessageBuilder = GrpcExchanger.Message.newBuilder();
+                GrpcExchanger.Response.Builder responseMessageBuilder = GrpcExchanger.Response.newBuilder();
                 if (actualReturnValue == null) {
                     responseObserver.onCompleted();
                     return;
                 }
                 byte[] data = grpcMessageSerializer.serialize(actualReturnValue);
-                GrpcExchanger.Message respMessage = responseMessageBuilder.putMetadata("actualType", actualReturnValue.getClass().getName())
+                GrpcExchanger.Response respMessage = responseMessageBuilder.putMetadata("actualType", actualReturnValue.getClass().getName())
                         .setMessage(ByteString.copyFrom(data)).build();
                 responseObserver.onNext(respMessage);
                 responseObserver.onCompleted();
             });
             return;
         }
-        GrpcExchanger.Message.Builder responseMessageBuilder = GrpcExchanger.Message.newBuilder();
+        GrpcExchanger.Response.Builder responseMessageBuilder = GrpcExchanger.Response.newBuilder();
         byte[] data = grpcMessageSerializer.serialize(returnValue);
-        GrpcExchanger.Message respMessage = responseMessageBuilder
+        GrpcExchanger.Response respMessage = responseMessageBuilder
                 .setMessage(ByteString.copyFrom(data)).build();
         responseObserver.onNext(respMessage);
         responseObserver.onCompleted();
