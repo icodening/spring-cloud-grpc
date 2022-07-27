@@ -2,6 +2,8 @@ package example.grpc.service;
 
 import example.grpc.api.OrderServiceGrpc;
 import example.grpc.api.OrderServiceOuterClass;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,11 @@ public class OrderServiceImpl extends OrderServiceGrpc.OrderServiceImplBase {
                 .filter(ele -> ele.getId().equals(id))
                 .findFirst()
                 .orElse(null);
+        if (order == null) {
+            Status status = Status.UNAVAILABLE.withDescription("no such order [id=" + id + "]");
+            responseObserver.onError(new StatusRuntimeException(status));
+            return;
+        }
         responseObserver.onNext(order);
         responseObserver.onCompleted();
     }
