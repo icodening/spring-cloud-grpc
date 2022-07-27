@@ -6,6 +6,7 @@ import org.springframework.cloud.grpc.ExchangerGrpc;
 import org.springframework.cloud.grpc.GrpcExchanger;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.GrpcServiceRegistry;
+import org.springframework.cloud.grpc.internal.GrpcExchangeMetadata;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -57,6 +58,11 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
         }
         Object returnValue = ReflectionUtils.invokeMethod(method, serviceImpl, args);
         if (returnValue == null) {
+            GrpcExchanger.Response.Builder responseMessageBuilder = GrpcExchanger.Response.newBuilder();
+            GrpcExchanger.Response nullResponse = responseMessageBuilder
+                    .putMetadata(GrpcExchangeMetadata.IS_NULL, Boolean.TRUE.toString())
+                    .setMessage(ByteString.EMPTY).build();
+            responseObserver.onNext(nullResponse);
             responseObserver.onCompleted();
             return;
         }
@@ -69,7 +75,7 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
                     return;
                 }
                 byte[] data = grpcMessageSerializer.serialize(actualReturnValue);
-                GrpcExchanger.Response respMessage = responseMessageBuilder.putMetadata("actualType", actualReturnValue.getClass().getName())
+                GrpcExchanger.Response respMessage = responseMessageBuilder.putMetadata(GrpcExchangeMetadata.ACTUAL_TYPE, actualReturnValue.getClass().getName())
                         .setMessage(ByteString.copyFrom(data)).build();
                 responseObserver.onNext(respMessage);
                 responseObserver.onCompleted();

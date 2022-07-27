@@ -11,6 +11,7 @@ import org.springframework.cloud.grpc.GrpcExchanger;
 import org.springframework.cloud.grpc.GrpcMessageSerializer;
 import org.springframework.cloud.grpc.client.GrpcChannelManager;
 import org.springframework.cloud.grpc.client.GrpcClientInvoker;
+import org.springframework.cloud.grpc.internal.GrpcExchangeMetadata;
 import org.springframework.cloud.grpc.support.DirectApplicationLoadBalancerInterceptor;
 import org.springframework.cloud.grpc.support.GrpcCallOptions;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
@@ -70,7 +71,12 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
                     try {
                         //TODO optimize
                         GrpcExchanger.Response responseMessage = grpcResponse.get();
-                        String actualType = responseMessage.getMetadataMap().get("actualType");
+                        String isNullFlag = responseMessage.getMetadataOrDefault(GrpcExchangeMetadata.IS_NULL, Boolean.FALSE.toString());
+                        if (Boolean.parseBoolean(isNullFlag)) {
+                            returnCompletableFuture.complete(null);
+                            return;
+                        }
+                        String actualType = responseMessage.getMetadataMap().get(GrpcExchangeMetadata.ACTUAL_TYPE);
                         Class<?> type = ClassUtils.resolveClassName(actualType, ClassUtils.getDefaultClassLoader());
                         Object response = grpcMessageSerializer.deserialize(responseMessage.getMessage().toByteArray(), type);
                         returnCompletableFuture.complete(response);
@@ -83,6 +89,10 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
             return returnCompletableFuture;
         }
         GrpcExchanger.Response responseMessage = grpcResponse.get();
+        String isNullFlag = responseMessage.getMetadataOrDefault(GrpcExchangeMetadata.IS_NULL, Boolean.FALSE.toString());
+        if (Boolean.parseBoolean(isNullFlag)) {
+            return null;
+        }
         return grpcMessageSerializer.deserialize(responseMessage.getMessage().toByteArray(), returnType);
     }
 

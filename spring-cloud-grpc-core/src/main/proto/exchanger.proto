@@ -12,9 +12,6 @@ message Request {
 }
 
 message Response {
-  string interfaceType = 1;
-  string methodName = 2;
-  repeated string parameterType = 3;
-  map<string, string> metadata = 4;
-  bytes message = 5;
+  map<string, string> metadata = 1;
+  bytes message = 2;
 }
