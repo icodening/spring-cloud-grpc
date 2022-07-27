@@ -71,6 +71,10 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
             returnCompletableFuture.thenAccept((actualReturnValue) -> {
                 GrpcExchanger.Response.Builder responseMessageBuilder = GrpcExchanger.Response.newBuilder();
                 if (actualReturnValue == null) {
+                    GrpcExchanger.Response nullResponse = responseMessageBuilder
+                            .putMetadata(GrpcExchangeMetadata.IS_NULL, Boolean.TRUE.toString())
+                            .setMessage(ByteString.EMPTY).build();
+                    responseObserver.onNext(nullResponse);
                     responseObserver.onCompleted();
                     return;
                 }
