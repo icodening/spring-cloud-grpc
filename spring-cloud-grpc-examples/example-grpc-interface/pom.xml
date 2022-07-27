@@ -19,8 +19,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-all</artifactId>
+            <groupId>com.icodening.cloud</groupId>
+            <artifactId>spring-cloud-starter-grpc</artifactId>
+            <version>${revision}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

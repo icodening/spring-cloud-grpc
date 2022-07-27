@@ -1,0 +1,8 @@
+#resilience4j circuit breaker config
+resilience4j:
+  circuitbreaker:
+    configs:
+      "[grpc-provider/OrderService/queryOrder]":
+        failureRateThreshold: 80
+        slowCallDurationThreshold: 500
+        slidingWindowType: TIME_BASED
