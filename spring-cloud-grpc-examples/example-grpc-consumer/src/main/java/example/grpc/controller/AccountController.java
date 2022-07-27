@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * @author icodening
  * @date 2022.07.27
@@ -29,7 +31,17 @@ public class AccountController {
     }
 
     @GetMapping()
-    public Object getAccount() {
+    public Object findAll() {
         return accountService.findAll();
+    }
+
+    @GetMapping("/future/{id}")
+    public CompletableFuture<Account> getAccountCompletableFuture(@PathVariable(name = "id") Long id) {
+        CompletableFuture<Account> accountCompletableFuture = accountService.getAccountCompletableFuture(id);
+        return accountCompletableFuture.whenComplete((account, throwable) -> {
+            if (account == null) {
+                throw new RuntimeException("no such account for id [" + id + "]");
+            }
+        });
     }
 }

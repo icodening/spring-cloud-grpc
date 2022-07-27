@@ -4,6 +4,7 @@ import example.grpc.entity.Account;
 import org.springframework.cloud.grpc.annotation.GrpcClient;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author icodening
@@ -15,5 +16,7 @@ public interface AccountService {
     Account getAccount(Long id);
 
     List<Account> findAll();
+
+    CompletableFuture<Account> getAccountCompletableFuture(Long id);
 
 }

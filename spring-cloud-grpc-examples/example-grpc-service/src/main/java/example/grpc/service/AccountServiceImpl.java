@@ -8,6 +8,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author icodening
@@ -15,6 +18,8 @@ import java.util.Map;
  */
 @Service
 public class AccountServiceImpl implements AccountService {
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     private final Map<Long, Account> accountMap;
 
@@ -34,5 +39,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public List<Account> findAll() {
         return new ArrayList<>(accountMap.values());
+    }
+
+    @Override
+    public CompletableFuture<Account> getAccountCompletableFuture(Long id) {
+        CompletableFuture<Account> accountCompletableFuture = new CompletableFuture<>();
+        executorService.submit(() -> {
+            try {
+                //business
+                Thread.sleep(100);
+            } catch (InterruptedException ignore) {
+            }
+            accountCompletableFuture.complete(accountMap.get(id));
+        });
+        return accountCompletableFuture;
     }
 }
