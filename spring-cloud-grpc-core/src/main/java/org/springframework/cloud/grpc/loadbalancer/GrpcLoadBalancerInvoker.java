@@ -62,6 +62,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
         CompletableFuture<Object> objectCompletableFuture = new CompletableFuture<>();
         asyncStub.withOption(GrpcCallOptions.SERVICE, invocation.getMethod().getDeclaringClass().getSimpleName())
                 .withOption(GrpcCallOptions.METHOD, invocation.getMethod().getName())
+                //FIXME custom executor
                 .withExecutor(ForkJoinPool.commonPool())
                 .exchange(grpcRequest, new StreamObserver<GrpcExchanger.Response>() {
                     @Override
@@ -87,7 +88,7 @@ public class GrpcLoadBalancerInvoker implements GrpcClientInvoker {
 
                     @Override
                     public void onCompleted() {
-                        System.out.println("complete");
+
                     }
                 });
         Class<?> returnType = invocation.getMethod().getReturnType();
