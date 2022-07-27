@@ -43,8 +43,8 @@ public class GrpcServerHandler extends ExchangerGrpc.ExchangerImplBase {
             return;
         }
         String methodName = request.getMethodName();
-        Class<?>[] paramTypes = new Class[request.getParameterTypeCount()];
-        Object[] args = new Object[request.getParameterTypeCount()];
+        Class<?>[] paramTypes = new Class[request.getParametersMap().size()];
+        Object[] args = new Object[request.getParametersMap().size()];
         int index = 0;
         for (Map.Entry<String, ByteString> entry : request.getParametersMap().entrySet()) {
             paramTypes[index] = ClassUtils.resolveClassName(entry.getKey(), ClassUtils.getDefaultClassLoader());
