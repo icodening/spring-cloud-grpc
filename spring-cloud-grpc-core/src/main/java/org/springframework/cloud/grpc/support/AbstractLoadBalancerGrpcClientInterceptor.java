@@ -22,6 +22,7 @@ import org.springframework.cloud.grpc.client.GrpcChannelManager;
 import org.springframework.cloud.grpc.loadbalancer.GrpcRequestContext;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.Set;
 
@@ -55,9 +56,11 @@ public abstract class AbstractLoadBalancerGrpcClientInterceptor implements Clien
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel channel) {
         String application = determineApplication(method, callOptions, channel);
+        String serviceName = callOptions.getOption(GrpcCallOptions.SERVICE);
+        String methodName = callOptions.getOption(GrpcCallOptions.METHOD);
         GrpcRequestContext grpcRequestContext = new GrpcRequestContext(application)
-                .setServiceName(method.getServiceName())
-                .setBareMethodName(method.getBareMethodName());
+                .setServiceName(StringUtils.hasText(serviceName) ? serviceName : method.getServiceName())
+                .setBareMethodName(StringUtils.hasText(methodName) ? methodName : method.getBareMethodName());
         DefaultRequest<GrpcRequestContext> lbRequest = new DefaultRequest<>(grpcRequestContext);
         Set<LoadBalancerLifecycle> supportedLifecycleProcessors = getSupportedLifecycleProcessors(application);
         supportedLifecycleProcessors.forEach(lifecycle -> lifecycle.onStart(lbRequest));
