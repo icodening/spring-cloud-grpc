@@ -12,3 +12,5 @@ resilience4j:
         slowCallDurationThreshold: 500
         slidingWindowType: TIME_BASED
         minimumNumberOfCalls: 1
+        ignoreExceptions:
+          - io.grpc.StatusRuntimeException
