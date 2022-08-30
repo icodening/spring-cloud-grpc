@@ -32,7 +32,7 @@
         <spring.boot.version>2.5.14</spring.boot.version>
         <spring.cloud.version>2020.0.5</spring.cloud.version>
         <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
-        <grpc.version>1.47.0</grpc.version>
+        <grpc.version>1.49.0</grpc.version>
         <sentinel.version>1.8.0</sentinel.version>
     </properties>
 
@@ -62,8 +62,10 @@
             </dependency>
             <dependency>
                 <groupId>io.grpc</groupId>
-                <artifactId>grpc-all</artifactId>
+                <artifactId>grpc-bom</artifactId>
                 <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.alibaba.csp</groupId>
